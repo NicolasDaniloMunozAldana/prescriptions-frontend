@@ -56,15 +56,12 @@ export default function RegisterForm() {
 
     setLoading(true);
     try {
-      const tokens = await register({
+      await register({
         name: form.name.trim(),
         email: form.email.trim(),
         password: form.password,
       });
-      // Store tokens — move to httpOnly cookies via an API route for production
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
-      router.push('/');
+      router.push('/patient');
     } catch (err) {
       setError((err as Error).message);
     } finally {

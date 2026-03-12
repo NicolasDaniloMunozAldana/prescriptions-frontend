@@ -1,5 +1,3 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
-
 export interface LoginPayload {
   email: string;
   password: string;
@@ -11,35 +9,33 @@ export interface RegisterPayload {
   name: string;
 }
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-}
-
-async function handleResponse<T>(res: Response): Promise<T> {
+async function handleResponse(res: Response): Promise<void> {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const raw = data.message;
+    const raw = (data as { message?: string | string[] }).message;
     const message = Array.isArray(raw) ? raw[0] : (raw ?? 'Error inesperado');
     throw new Error(message);
   }
-  return data as T;
 }
 
-export async function login(payload: LoginPayload): Promise<AuthTokens> {
-  const res = await fetch(`${API_BASE}/auth/login`, {
+/**
+ * Calls the Next.js BFF route which sets httpOnly session cookies.
+ * No tokens are returned to the client.
+ */
+export async function login(payload: LoginPayload): Promise<void> {
+  const res = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse<AuthTokens>(res);
+  return handleResponse(res);
 }
 
-export async function register(payload: RegisterPayload): Promise<AuthTokens> {
-  const res = await fetch(`${API_BASE}/auth/register`, {
+export async function register(payload: RegisterPayload): Promise<void> {
+  const res = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse<AuthTokens>(res);
+  return handleResponse(res);
 }

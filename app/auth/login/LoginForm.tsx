@@ -19,11 +19,8 @@ export default function LoginForm() {
     setError('');
     setLoading(true);
     try {
-      const tokens = await login({ email, password });
-      // Store tokens — move to httpOnly cookies via an API route for production
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
-      router.push('/');
+      await login({ email, password });
+      router.push('/patient');
     } catch (err) {
       setError((err as Error).message);
     } finally {
