@@ -8,387 +8,398 @@ import NutrabioticsLogo from '@/app/components/auth/NutrabioticsLogo';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PrescriptionItem {
-    id: string;
-    name: string;
-    dosage: string | null;
-    quantity: number | null;
-    instructions: string | null;
+  id: string;
+  name: string;
+  dosage: string | null;
+  quantity: number | null;
+  instructions: string | null;
 }
 
 interface FullPrescription {
+  id: string;
+  code: string;
+  notes: string | null;
+  status: 'pending' | 'consumed';
+  createdAt: string;
+  consumedAt: string | null;
+  items: PrescriptionItem[];
+  patient: {
     id: string;
-    code: string;
-    notes: string | null;
-    status: 'pending' | 'consumed';
-    createdAt: string;
-    consumedAt: string | null;
-    items: PrescriptionItem[];
-    patient: {
-        id: string;
-        birthDate: string | null;
-        user: { id: string; name: string; email: string };
-    };
-    author: {
-        specialty: string | null;
-        user: { id: string; name: string; email: string };
-    };
+    birthDate: string | null;
+    user: { id: string; name: string; email: string };
+  };
+  author: {
+    specialty: string | null;
+    user: { id: string; name: string; email: string };
+  };
 }
 
 interface Props {
-    id: string;
-    role: 'doctor' | 'patient';
-    backHref?: string;
+  id: string;
+  role: 'doctor' | 'patient';
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function PrescriptionDetailPage({ id, role, backHref }: Props) {
-    const router = useRouter();
-    const [prescription, setPrescription] = useState<FullPrescription | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
-    const [error, setError] = useState('');
-    const [consuming, setConsuming] = useState(false);
-    const [confirmConsume, setConfirmConsume] = useState(false);
-    const [downloadingPdf, setDownloadingPdf] = useState(false);
+export default function PrescriptionDetailPage({ id, role }: Props) {
+  const router = useRouter();
+  const [prescription, setPrescription] = useState<FullPrescription | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState('');
+  const [consuming, setConsuming] = useState(false);
+  const [confirmConsume, setConfirmConsume] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
-    const resolvedBackHref = backHref ?? (role === 'doctor' ? '/doctor' : '/dashboard');
+  const backHref = role === 'doctor' ? '/doctor' : '/dashboard';
 
-    // Choose the correct API endpoint based on role
-    const apiBase =
-        role === 'doctor' || backHref?.startsWith('/admin')
-            ? `/api/prescriptions/${id}`
-            : `/api/prescriptions/${id}`;
-
-    // ─── Fetch ───────────────────────────────────────────────────────────────
-    useEffect(() => {
-        async function fetchPrescription() {
-            try {
-                const res = await fetch(apiBase);
-                if (res.status === 401) { router.replace('/auth/login'); return; }
-                if (res.status === 404) { setNotFound(true); setIsLoading(false); return; }
-                if (!res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    setError((data as { message?: string }).message ?? 'Error inesperado');
-                    setIsLoading(false);
-                    return;
-                }
-                setPrescription(await res.json());
-            } catch {
-                setError('Error de conexión con el servidor.');
-            } finally {
-                setIsLoading(false);
-            }
+  // ─── Fetch ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    async function fetchPrescription() {
+      try {
+        const res = await fetch(`/api/prescriptions/${id}`);
+        if (res.status === 401) { router.replace('/auth/login'); return; }
+        if (res.status === 404) { setNotFound(true); setIsLoading(false); return; }
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError((data as { message?: string }).message ?? 'Error inesperado');
+          setIsLoading(false);
+          return;
         }
-        fetchPrescription();
-    }, [apiBase, router]);
-
-    // ─── Consume ─────────────────────────────────────────────────────────────
-    async function handleConsume() {
-        setConsuming(true);
-        setConfirmConsume(false);
-        try {
-            const res = await fetch(`/api/prescriptions/${id}/consume`, { method: 'PUT' });
-            if (res.status === 401) { router.replace('/auth/login'); return; }
-            if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                setError((data as { message?: string }).message ?? 'Error al consumir');
-                return;
-            }
-            setPrescription(await res.json());
-        } finally {
-            setConsuming(false);
-        }
+        setPrescription(await res.json());
+      } catch {
+        setError('Error de conexión con el servidor.');
+      } finally {
+        setIsLoading(false);
+      }
     }
+    fetchPrescription();
+  }, [id, router]);
 
-    // ─── PDF ─────────────────────────────────────────────────────────────────
-    async function handleDownloadPDF() {
-        setDownloadingPdf(true);
-        try {
-            const res = await fetch(`/api/prescriptions/${id}/pdf`);
-            if (res.status === 401) { router.replace('/auth/login'); return; }
-            if (!res.ok) { setError('Error al descargar el PDF.'); return; }
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `prescripcion-${prescription?.code ?? id}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-        } finally {
-            setDownloadingPdf(false);
-        }
+  // ─── Consume ──────────────────────────────────────────────────────────────
+  async function handleConsume() {
+    setConsuming(true);
+    setConfirmConsume(false);
+    try {
+      const res = await fetch(`/api/prescriptions/${id}/consume`, { method: 'PUT' });
+      if (res.status === 401) { router.replace('/auth/login'); return; }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { message?: string }).message ?? 'Error al consumir');
+        return;
+      }
+      setPrescription(await res.json());
+    } finally {
+      setConsuming(false);
     }
+  }
 
-    function formatDate(d: string) {
-        return new Date(d).toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-        });
+  // ─── PDF ──────────────────────────────────────────────────────────────────
+  async function handleDownloadPDF() {
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(`/api/prescriptions/${id}/pdf`);
+      if (res.status === 401) { router.replace('/auth/login'); return; }
+      if (!res.ok) { setError('Error al descargar el PDF.'); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prescripcion-${prescription?.code ?? id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloadingPdf(false);
     }
+  }
 
-    return (
-        <div className="min-h-screen bg-gray-100">
+  function formatDate(d: string) {
+    return new Date(d).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }
 
-            <div className="mx-auto mb-6 flex max-w-4xl px-4 sm:px-6 lg:px-8 justify-end">
-                <Link
-                    href={resolvedBackHref}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition hover:bg-gray-50"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Volver
-                </Link>
+  // ─── Render states ────────────────────────────────────────────────────────
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+
+      {/* Header */}
+      <header className="bg-white shadow-sm">
+        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <NutrabioticsLogo />
+          <Link
+            href={backHref}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Volver
+          </Link>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+
+        {/* Loading skeleton */}
+        {isLoading && (
+          <div className="space-y-4">
+            <div className="h-8 w-64 animate-pulse rounded-lg bg-white shadow-sm" />
+            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-4">
+              {[1, 2, 3, 4].map((n) => (
+                <div key={n} className="h-5 animate-pulse rounded bg-gray-100" style={{ width: `${60 + n * 8}%` }} />
+              ))}
+            </div>
+            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="h-4 animate-pulse rounded bg-gray-100" style={{ width: `${50 + n * 10}%` }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Not found */}
+        {!isLoading && notFound && (
+          <div className="rounded-2xl bg-white py-20 text-center shadow-sm">
+            <p className="text-2xl font-bold text-gray-900">Prescripción no encontrada</p>
+            <p className="mt-2 text-sm text-gray-500">No existe esta prescripción o no tienes acceso.</p>
+            <Link href={backHref} className="mt-6 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90">
+              Volver al inicio
+            </Link>
+          </div>
+        )}
+
+        {/* Error */}
+        {!isLoading && error && !prescription && (
+          <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
+        {/* Content */}
+        {!isLoading && prescription && (
+          <div className="space-y-5">
+
+            {/* Error banner (for action errors) */}
+            {error && (
+              <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
+            {/* Title row */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Prescripción médica</p>
+                <h1 className="mt-0.5 text-2xl font-bold text-gray-900">
+                  #{prescription.code}
+                </h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  Emitida el {formatDate(prescription.createdAt)}
+                </p>
+              </div>
+              <span className={`self-start sm:self-auto rounded-full px-4 py-1.5 text-sm font-semibold ${
+                prescription.status === 'pending'
+                  ? 'bg-blue-50 text-blue-700'
+                  : 'bg-green-50 text-green-700'
+              }`}>
+                {prescription.status === 'pending' ? 'Pendiente' : 'Consumida'}
+              </span>
             </div>
 
+            {/* Info grid */}
+            <div className={`grid grid-cols-1 gap-4 ${role === 'doctor' ? 'sm:grid-cols-2' : ''}`}>
 
-            <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-
-                {/* Loading skeleton */}
-                {isLoading && (
-                    <div className="space-y-4">
-                        <div className="h-8 w-64 animate-pulse rounded-lg bg-white shadow-sm" />
-                        <div className="rounded-2xl bg-white p-6 shadow-sm space-y-4">
-                            {[1, 2, 3, 4].map((n) => (
-                                <div key={n} className="h-5 animate-pulse rounded bg-gray-100" style={{ width: `${60 + n * 8}%` }} />
-                            ))}
-                        </div>
+              {/* Doctor card */}
+              <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+                <div className="p-5">
+                  <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                    Información del Médico
+                  </p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary select-none">
+                      {prescription.author.user.name.charAt(0).toUpperCase()}
                     </div>
-                )}
-
-                {/* Not found */}
-                {!isLoading && notFound && (
-                    <div className="rounded-2xl bg-white py-20 text-center shadow-sm">
-                        <p className="text-2xl font-bold text-gray-900">Prescripción no encontrada</p>
-                        <p className="mt-2 text-sm text-gray-500">No existe esta prescripción o no tienes acceso.</p>
-                        <Link href={resolvedBackHref} className="mt-6 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90">
-                            Volver
-                        </Link>
+                    <p className="text-base font-bold text-gray-900">{prescription.author.user.name}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    {prescription.author.specialty && (
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Especialidad</p>
+                        <p className="text-sm font-semibold text-gray-800">{prescription.author.specialty}</p>
+                      </div>
+                    )}
+                    <div className="col-span-2 sm:col-span-1">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Email</p>
+                      <p className="text-sm font-semibold text-gray-800 break-all">{prescription.author.user.email}</p>
                     </div>
-                )}
-
-                {/* Error */}
-                {!isLoading && error && !prescription && (
-                    <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-                        {error}
-                    </div>
-                )}
-
-                {/* Content */}
-                {!isLoading && prescription && (
-                    <div className="space-y-5">
-
-                        {error && (
-                            <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-                                {error}
-                            </div>
-                        )}
-
-                        {/* Title row */}
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Prescripción médica</p>
-                                <h1 className="mt-0.5 text-2xl font-bold text-gray-900">#{prescription.code}</h1>
-                                <p className="mt-1 text-sm text-gray-500">Emitida el {formatDate(prescription.createdAt)}</p>
-                            </div>
-                            <span className={`self-start sm:self-auto rounded-full px-4 py-1.5 text-sm font-semibold ${prescription.status === 'pending' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
-                                }`}>
-                                {prescription.status === 'pending' ? 'Pendiente' : 'Consumida'}
-                            </span>
-                        </div>
-
-                        {/* Info grid */}
-                        <div className={`grid grid-cols-1 gap-4 ${role === 'doctor' || backHref?.startsWith('/admin') ? 'sm:grid-cols-2' : ''}`}>
-
-                            {/* Doctor card */}
-                            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-                                <div className="h-1 bg-primary" />
-                                <div className="p-5">
-                                    <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">Información del Médico</p>
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary select-none">
-                                            {prescription.author.user.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <p className="text-base font-bold text-gray-900">{prescription.author.user.name}</p>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                        {prescription.author.specialty && (
-                                            <div className="col-span-2 sm:col-span-1">
-                                                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Especialidad</p>
-                                                <p className="text-sm font-semibold text-gray-800">{prescription.author.specialty}</p>
-                                            </div>
-                                        )}
-                                        <div className="col-span-2 sm:col-span-1">
-                                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Email</p>
-                                            <p className="text-sm font-semibold text-gray-800 break-all">{prescription.author.user.email}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Patient card — doctor and admin views */}
-                            {(role === 'doctor' || backHref?.startsWith('/admin')) && (
-                                <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-                                    <div className="h-1 bg-primary" />
-                                    <div className="p-5">
-                                        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">Información del Paciente</p>
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 select-none">
-                                                {prescription.patient.user.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <p className="text-base font-bold text-gray-900">{prescription.patient.user.name}</p>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                                            <div className="col-span-2 sm:col-span-1">
-                                                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Email</p>
-                                                <p className="text-sm font-semibold text-gray-800 break-all">{prescription.patient.user.email}</p>
-                                            </div>
-                                            {prescription.patient.birthDate && (
-                                                <div className="col-span-2 sm:col-span-1">
-                                                    <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Fecha de nacimiento</p>
-                                                    <p className="text-sm font-semibold text-gray-800">{formatDate(prescription.patient.birthDate)}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Notes */}
-                        {prescription.notes && (
-                            <div className="rounded-2xl border-l-4 bg-primary/5 p-5">
-                                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-primary/70">Notas Adicionales</p>
-                                <p className="text-sm leading-relaxed text-gray-700">{prescription.notes}</p>
-                            </div>
-                        )}
-
-                        {/* Consumed date */}
-                        {prescription.consumedAt && (
-                            <div className="rounded-2xl bg-green-50 px-5 py-4">
-                                <p className="text-sm text-green-700">
-                                    <span className="font-semibold">Consumida el</span>{' '}
-                                    {formatDate(prescription.consumedAt)}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Medications */}
-                        <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-                            <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
-                                <h2 className="font-bold text-gray-900">Medicamentos Prescritos</h2>
-                                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                                    {prescription.items.length}
-                                </span>
-                            </div>
-
-                            {prescription.items.length === 0 ? (
-                                <p className="px-5 py-6 text-sm text-gray-400">Sin medicamentos registrados.</p>
-                            ) : (
-                                <div className="p-5 space-y-3">
-                                    {prescription.items.map((item, idx) => (
-                                        <div key={item.id} className="rounded-xl border border-gray-100 bg-gray-50/50 overflow-hidden">
-                                            <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-4 py-3">
-                                                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-                                                    {idx + 1}
-                                                </span>
-                                                <h3 className="font-bold text-gray-900">{item.name}</h3>
-                                            </div>
-                                            <div className="px-4 py-3 space-y-3">
-                                                <div className="grid grid-cols-2 gap-x-6">
-                                                    <div>
-                                                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Dosis</p>
-                                                        <p className="text-sm font-semibold text-gray-800">
-                                                            {item.dosage ?? <span className="font-normal text-gray-300">—</span>}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Cantidad</p>
-                                                        <p className="text-sm font-semibold text-gray-800">
-                                                            {item.quantity != null ? item.quantity : <span className="font-normal text-gray-300">—</span>}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {item.instructions && (
-                                                    <div className="border-l-4 border-primary pl-3">
-                                                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Instrucciones</p>
-                                                        <p className="text-sm text-gray-700">{item.instructions}</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-col gap-3 sm:flex-row">
-                            {role === 'patient' && prescription.status === 'pending' && (
-                                <button
-                                    onClick={() => setConfirmConsume(true)}
-                                    disabled={consuming}
-                                    className="flex-1 rounded-xl border border-primary py-3 text-sm font-semibold text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                                >
-                                    {consuming ? 'Procesando…' : 'Marcar como consumida'}
-                                </button>
-                            )}
-                            <button
-                                onClick={handleDownloadPDF}
-                                disabled={downloadingPdf}
-                                className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                            >
-                                {downloadingPdf ? 'Generando PDF…' : 'Descargar PDF'}
-                            </button>
-                        </div>
-
-                    </div>
-                )}
-            </main>
-
-            {/* Confirm consume dialog */}
-            {confirmConsume && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="confirm-consume-title"
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-                >
-                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-                        <h3 id="confirm-consume-title" className="text-base font-bold text-gray-900">
-                            Confirmar consumo
-                        </h3>
-                        <p className="mt-2 text-sm text-gray-500">
-                            ¿Estás seguro de que deseas marcar esta prescripción como consumida? Esta acción no puede deshacerse.
-                        </p>
-                        <div className="mt-5 flex gap-3">
-                            <button
-                                onClick={() => setConfirmConsume(false)}
-                                className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleConsume}
-                                className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 cursor-pointer"
-                            >
-                                Confirmar
-                            </button>
-                        </div>
-                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Patient card — only for doctor */}
+              {role === 'doctor' && (
+                <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+                  <div className="p-5">
+                    <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      Información del Paciente
+                    </p>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 select-none">
+                        {prescription.patient.user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <p className="text-base font-bold text-gray-900">{prescription.patient.user.name}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Email</p>
+                        <p className="text-sm font-semibold text-gray-800 break-all">{prescription.patient.user.email}</p>
+                      </div>
+                      {prescription.patient.birthDate && (
+                        <div className="col-span-2 sm:col-span-1">
+                          <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Fecha de nacimiento</p>
+                          <p className="text-sm font-semibold text-gray-800">{formatDate(prescription.patient.birthDate)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Notes */}
+            {prescription.notes && (
+              <div className="rounded-2xl border-l-4  bg-primary/5 p-5">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-primary/70">
+                  Notas Adicionales
+                </p>
+                <p className="text-sm leading-relaxed text-gray-700">{prescription.notes}</p>
+              </div>
             )}
+
+            {/* Consumed date */}
+            {prescription.consumedAt && (
+              <div className="rounded-2xl bg-green-50 px-5 py-4">
+                <p className="text-sm text-green-700">
+                  <span className="font-semibold">Consumida el</span>{' '}
+                  {formatDate(prescription.consumedAt)}
+                </p>
+              </div>
+            )}
+
+            {/* Medications */}
+            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
+                <h2 className="font-bold text-gray-900">Medicamentos Prescritos</h2>
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  {prescription.items.length}
+                </span>
+              </div>
+
+              {prescription.items.length === 0 ? (
+                <p className="px-5 py-6 text-sm text-gray-400">Sin medicamentos registrados.</p>
+              ) : (
+                <div className="p-5 space-y-3">
+                  {prescription.items.map((item, idx) => (
+                    <div key={item.id} className="rounded-xl border border-gray-100 bg-gray-50/50 overflow-hidden">
+                      {/* Item header */}
+                      <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-4 py-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                          {idx + 1}
+                        </span>
+                        <h3 className="font-bold text-gray-900">{item.name}</h3>
+                      </div>
+                      {/* Item body */}
+                      <div className="px-4 py-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-x-6">
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Dosis</p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {item.dosage ?? <span className="font-normal text-gray-300">—</span>}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Cantidad</p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {item.quantity != null ? item.quantity : <span className="font-normal text-gray-300">—</span>}
+                            </p>
+                          </div>
+                        </div>
+                        {item.instructions && (
+                          <div className="border-l-4 border-primary pl-3">
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Instrucciones</p>
+                            <p className="text-sm text-gray-700">{item.instructions}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {role === 'patient' && prescription.status === 'pending' && (
+                <button
+                  onClick={() => setConfirmConsume(true)}
+                  disabled={consuming}
+                  className="flex-1 rounded-xl border border-primary py-3 text-sm font-semibold text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                >
+                  {consuming ? 'Procesando…' : 'Marcar como consumida'}
+                </button>
+              )}
+              <button
+                onClick={handleDownloadPDF}
+                disabled={downloadingPdf}
+                className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              >
+                {downloadingPdf ? 'Generando PDF…' : 'Descargar PDF'}
+              </button>
+            </div>
+
+          </div>
+        )}
+      </main>
+
+      {/* Confirm consume dialog */}
+      {confirmConsume && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-consume-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 id="confirm-consume-title" className="text-base font-bold text-gray-900">
+              Confirmar consumo
+            </h3>
+            <p className="mt-2 text-sm text-gray-500">
+              ¿Estás seguro de que deseas marcar esta prescripción como consumida?
+              Esta acción no puede deshacerse.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setConfirmConsume(false)}
+                className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConsume}
+                className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 cursor-pointer"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
         </div>
-    );
+      )}
+    </div>
+  );
 }

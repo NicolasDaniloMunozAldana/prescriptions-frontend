@@ -6,10 +6,18 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const { backendRes, newTokens } = await authenticatedFetch(req, `/api/prescriptions/${id}`);
+
+  const { backendRes, newTokens } = await authenticatedFetch(
+    req,
+    `/api/prescriptions/${id}`,
+  );
 
   const data = await backendRes.json().catch(() => ({}));
   const response = NextResponse.json(data, { status: backendRes.status });
-  if (newTokens) setTokenCookies(response, newTokens.accessToken, newTokens.refreshToken);
+
+  if (newTokens) {
+    setTokenCookies(response, newTokens.accessToken, newTokens.refreshToken);
+  }
+
   return response;
 }
