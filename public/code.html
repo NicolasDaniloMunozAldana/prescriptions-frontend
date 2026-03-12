@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | Nutrabiotics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#ec5b13",
+                "background-light": "#f8f6f6",
+                "background-dark": "#221610",
+                "charcoal": "#333333",
+              },
+              fontFamily: {
+                "display": ["Public Sans"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Public Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center p-4">
+<div class="max-w-5xl w-full bg-white dark:bg-stone-900 rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+<!-- Left Side: Branding & Welcome -->
+<div class="w-full md:w-1/2 bg-stone-50 dark:bg-stone-800 p-10 md:p-16 flex flex-col justify-center border-b md:border-b-0 md:border-r border-stone-200 dark:border-stone-700">
+<div class="flex items-center gap-3 mb-12">
+<div class="size-10 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z" fill="currentColor" fill-rule="evenodd"></path>
+<path clip-rule="evenodd" d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h1 class="text-charcoal dark:text-slate-100 text-2xl font-bold tracking-tight">Nutrabiotics</h1>
+</div>
+<h2 class="text-charcoal dark:text-slate-100 text-4xl md:text-5xl font-black leading-tight tracking-tight mb-6">
+                Accede al universo Nutrabiotics
+            </h2>
+<p class="text-stone-500 dark:text-stone-400 text-lg font-normal max-w-sm">
+                Tu portal personalizado para gestionar tu salud y bienestar con soluciones avanzadas de nutrición.
+            </p>
+</div>
+<!-- Right Side: Login Form -->
+<div class="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center bg-white dark:bg-stone-900">
+<div class="max-w-md w-full mx-auto">
+<div class="mb-10">
+<h3 class="text-charcoal dark:text-slate-100 text-2xl font-bold mb-2">Iniciar sesión</h3>
+<p class="text-stone-500 dark:text-stone-400">Bienvenido de nuevo a tu portal de salud.</p>
+</div>
+<form class="space-y-6">
+<!-- Email Input -->
+<div class="flex flex-col gap-2">
+<label class="text-charcoal dark:text-slate-200 text-sm font-semibold uppercase tracking-wider">Correo electrónico</label>
+<input class="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-4 py-3.5 text-charcoal dark:text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-stone-400" placeholder="ejemplo@nutrabiotics.com" type="email"/>
+</div>
+<!-- Password Input -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<label class="text-charcoal dark:text-slate-200 text-sm font-semibold uppercase tracking-wider">Contraseña</label>
+<a class="text-primary text-sm font-medium hover:underline" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+<div class="relative group">
+<input class="w-full rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-4 py-3.5 text-charcoal dark:text-slate-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-stone-400" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 flex items-center" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+</div>
+<!-- Login Button -->
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-lg transition-colors shadow-lg shadow-primary/20" type="submit">
+                        Entrar
+                    </button>
+<!-- Secondary Action -->
+<div class="pt-6 text-center border-t border-stone-100 dark:border-stone-800 mt-8">
+<p class="text-stone-500 dark:text-stone-400">
+                            ¿Aún no tienes cuenta? 
+                            <a class="text-primary font-bold hover:underline ml-1" href="#">Crea tu cuenta ahora</a>
+</p>
+</div>
+</form>
+</div>
+</div>
+</div>
+</body></html>
