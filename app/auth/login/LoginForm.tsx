@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { login } from '../auth.api';
+import { login } from '@/lib/auth.service';
 import PasswordInput from '../../components/auth/PasswordInput';
 import NutrabioticsLogo from '../../components/auth/NutrabioticsLogo';
 
@@ -20,7 +20,7 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await login({ email, password });
-      router.push('/patient');
+      router.push('/dashboard');
     } catch (err) {
       setError((err as Error).message);
     } finally {

@@ -74,7 +74,7 @@ export async function authenticatedFetch(
     };
   }
 
-  const refreshRes = await fetch(`${BACKEND}/auth/refresh`, {
+  const refreshRes = await fetch(`${BACKEND}/api/auth/refresh`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${refreshToken}` },
   });

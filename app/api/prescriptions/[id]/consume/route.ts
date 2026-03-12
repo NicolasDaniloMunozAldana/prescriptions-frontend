@@ -9,7 +9,7 @@ export async function PUT(
 
   const { backendRes, newTokens } = await authenticatedFetch(
     req,
-    `/prescriptions/${id}/consume`,
+    `/api/prescriptions/${id}/consume`,
     { method: 'PUT' },
   );
 

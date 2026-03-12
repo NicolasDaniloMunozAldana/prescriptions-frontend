@@ -9,7 +9,7 @@ export async function GET(
 
   const { backendRes, newTokens } = await authenticatedFetch(
     req,
-    `/prescriptions/${id}/pdf`,
+    `/api/prescriptions/${id}/pdf`,
   );
 
   if (!backendRes.ok) {

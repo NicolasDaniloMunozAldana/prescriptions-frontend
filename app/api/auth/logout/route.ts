@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const refreshToken = req.cookies.get('refresh_token')?.value;
 
   // Best-effort revocation — cookies are cleared regardless of backend response
-  await authenticatedFetch(req, '/auth/logout', {
+  await authenticatedFetch(req, '/api/auth/logout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...(refreshToken ? { body: JSON.stringify({ refreshToken }) } : {}),

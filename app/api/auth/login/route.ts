@@ -6,11 +6,19 @@ const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const backendRes = await fetch(`${BACKEND}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let backendRes: Response;
+  try {
+    backendRes = await fetch(`${BACKEND}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return NextResponse.json(
+      { message: 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.' },
+      { status: 503 },
+    );
+  }
 
   const data = await backendRes.json().catch(() => ({}));
 

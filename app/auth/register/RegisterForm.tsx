@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { register } from '../auth.api';
+import { register } from '@/lib/auth.service';
 import PasswordInput from '../../components/auth/PasswordInput';
 
 
@@ -61,7 +61,7 @@ export default function RegisterForm() {
         email: form.email.trim(),
         password: form.password,
       });
-      router.push('/patient');
+      router.push('/dashboard');
     } catch (err) {
       setError((err as Error).message);
     } finally {

@@ -20,7 +20,7 @@ async function handleResponse(res: Response): Promise<void> {
 
 /**
  * Calls the Next.js BFF route which sets httpOnly session cookies.
- * No tokens are returned to the client.
+ * No tokens are ever exposed to client-side JavaScript.
  */
 export async function login(payload: LoginPayload): Promise<void> {
   const res = await fetch('/api/auth/login', {

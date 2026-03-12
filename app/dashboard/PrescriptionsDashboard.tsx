@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import NutrabioticsLogo from '../components/auth/NutrabioticsLogo';
+import NutrabioticsLogo from '@/app/components/auth/NutrabioticsLogo';
 import {
   getProfile,
   getPrescriptions,
@@ -14,7 +14,7 @@ import {
   type Prescription,
   type PrescriptionMeta,
   type StatusFilter,
-} from './patient.api';
+} from '@/lib/prescriptions.service';
 
 const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'Todas' },
@@ -22,7 +22,7 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'consumed', label: 'Consumidas' },
 ];
 
-export default function PatientDashboard() {
+export default function PrescriptionsDashboard() {
   const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);

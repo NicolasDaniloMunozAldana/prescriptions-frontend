@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { backendRes, newTokens } = await authenticatedFetch(
     req,
-    `/prescriptions/mine?${qs}`,
+    `/api/prescriptions/mine?${qs}`,
   );
 
   const data = await backendRes.json().catch(() => ({}));
