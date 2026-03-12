@@ -25,6 +25,7 @@ interface FullPrescription {
   items: PrescriptionItem[];
   patient: {
     id: string;
+    birthDate: string | null;
     user: { id: string; name: string; email: string };
   };
   author: {
@@ -215,37 +216,56 @@ export default function PrescriptionDetailPage({ id, role }: Props) {
             <div className={`grid grid-cols-1 gap-4 ${role === 'doctor' ? 'sm:grid-cols-2' : ''}`}>
 
               {/* Doctor card */}
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                  Médico
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary select-none">
-                    {prescription.author.user.name.charAt(0).toUpperCase()}
+              <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+                <div className="p-5">
+                  <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                    Información del Médico
+                  </p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary select-none">
+                      {prescription.author.user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <p className="text-base font-bold text-gray-900">{prescription.author.user.name}</p>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">{prescription.author.user.name}</p>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                     {prescription.author.specialty && (
-                      <p className="text-sm text-gray-500">{prescription.author.specialty}</p>
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Especialidad</p>
+                        <p className="text-sm font-semibold text-gray-800">{prescription.author.specialty}</p>
+                      </div>
                     )}
-                    <p className="text-xs text-gray-400">{prescription.author.user.email}</p>
+                    <div className="col-span-2 sm:col-span-1">
+                      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Email</p>
+                      <p className="text-sm font-semibold text-gray-800 break-all">{prescription.author.user.email}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Patient card — only for doctor */}
               {role === 'doctor' && (
-                <div className="rounded-2xl bg-white p-5 shadow-sm">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                    Paciente
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 select-none">
-                      {prescription.patient.user.name.charAt(0).toUpperCase()}
+                <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+                  <div className="p-5">
+                    <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      Información del Paciente
+                    </p>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600 select-none">
+                        {prescription.patient.user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <p className="text-base font-bold text-gray-900">{prescription.patient.user.name}</p>
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{prescription.patient.user.name}</p>
-                      <p className="text-xs text-gray-400">{prescription.patient.user.email}</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Email</p>
+                        <p className="text-sm font-semibold text-gray-800 break-all">{prescription.patient.user.email}</p>
+                      </div>
+                      {prescription.patient.birthDate && (
+                        <div className="col-span-2 sm:col-span-1">
+                          <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Fecha de nacimiento</p>
+                          <p className="text-sm font-semibold text-gray-800">{formatDate(prescription.patient.birthDate)}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -254,9 +274,9 @@ export default function PrescriptionDetailPage({ id, role }: Props) {
 
             {/* Notes */}
             {prescription.notes && (
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
-                  Notas
+              <div className="rounded-2xl border-l-4  bg-primary/5 p-5">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-primary/70">
+                  Notas Adicionales
                 </p>
                 <p className="text-sm leading-relaxed text-gray-700">{prescription.notes}</p>
               </div>
@@ -274,74 +294,52 @@ export default function PrescriptionDetailPage({ id, role }: Props) {
 
             {/* Medications */}
             <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 px-5 py-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                  Medicamentos
-                  <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500">
-                    {prescription.items.length}
-                  </span>
-                </p>
+              <div className="border-b border-gray-100 px-5 py-4 flex items-center gap-2">
+                <h2 className="font-bold text-gray-900">Medicamentos Prescritos</h2>
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  {prescription.items.length}
+                </span>
               </div>
 
               {prescription.items.length === 0 ? (
                 <p className="px-5 py-6 text-sm text-gray-400">Sin medicamentos registrados.</p>
               ) : (
-                <>
-                  {/* Desktop table */}
-                  <div className="hidden sm:block overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
-                          <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">#</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Medicamento</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Dosis</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Cantidad</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Instrucciones</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {prescription.items.map((item, idx) => (
-                          <tr key={item.id} className="hover:bg-gray-50/50">
-                            <td className="px-5 py-3.5 text-gray-400">{idx + 1}</td>
-                            <td className="px-5 py-3.5 font-medium text-gray-900">{item.name}</td>
-                            <td className="px-5 py-3.5 text-gray-600">{item.dosage ?? <span className="text-gray-300">—</span>}</td>
-                            <td className="px-5 py-3.5 text-gray-600">
-                              {item.quantity != null ? item.quantity : <span className="text-gray-300">—</span>}
-                            </td>
-                            <td className="px-5 py-3.5 text-gray-600">{item.instructions ?? <span className="text-gray-300">—</span>}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Mobile list */}
-                  <div className="sm:hidden divide-y divide-gray-100">
-                    {prescription.items.map((item, idx) => (
-                      <div key={item.id} className="px-5 py-4 space-y-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="font-semibold text-gray-900">{item.name}</p>
-                          <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">{idx + 1}</span>
+                <div className="p-5 space-y-3">
+                  {prescription.items.map((item, idx) => (
+                    <div key={item.id} className="rounded-xl border border-gray-100 bg-gray-50/50 overflow-hidden">
+                      {/* Item header */}
+                      <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-4 py-3">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                          {idx + 1}
+                        </span>
+                        <h3 className="font-bold text-gray-900">{item.name}</h3>
+                      </div>
+                      {/* Item body */}
+                      <div className="px-4 py-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-x-6">
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Dosis</p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {item.dosage ?? <span className="font-normal text-gray-300">—</span>}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Cantidad</p>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {item.quantity != null ? item.quantity : <span className="font-normal text-gray-300">—</span>}
+                            </p>
+                          </div>
                         </div>
-                        {item.dosage && (
-                          <p className="text-sm text-gray-600">
-                            <span className="text-gray-400">Dosis:</span> {item.dosage}
-                          </p>
-                        )}
-                        {item.quantity != null && (
-                          <p className="text-sm text-gray-600">
-                            <span className="text-gray-400">Cantidad:</span> {item.quantity}
-                          </p>
-                        )}
                         {item.instructions && (
-                          <p className="text-sm text-gray-600">
-                            <span className="text-gray-400">Instrucciones:</span> {item.instructions}
-                          </p>
+                          <div className="border-l-4 border-primary pl-3">
+                            <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400 mb-0.5">Instrucciones</p>
+                            <p className="text-sm text-gray-700">{item.instructions}</p>
+                          </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                </>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
