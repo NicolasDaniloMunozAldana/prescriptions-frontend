@@ -22,7 +22,8 @@ export default function LoginForm() {
       await login({ email, password });
       const profileRes = await fetch('/api/auth/profile');
       const profile = await profileRes.json();
-      router.push(profile?.role === 'doctor' ? '/doctor' : '/dashboard');
+      const role = profile?.role;
+      router.push(role === 'doctor' ? '/doctor' : role === 'admin' ? '/admin/dashboard' : '/dashboard');
     } catch (err) {
       setError((err as Error).message);
     } finally {

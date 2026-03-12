@@ -20,7 +20,8 @@ export default async function Home() {
       });
       if (res.ok) {
         const profile = await res.json();
-        redirect(profile?.role === 'doctor' ? '/doctor' : '/dashboard');
+        const role = profile?.role;
+        redirect(role === 'doctor' ? '/doctor' : role === 'admin' ? '/admin/dashboard' : '/dashboard');
       }
     }
   } catch {
