@@ -47,7 +47,7 @@ const NAV_ITEMS = [
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-export default function AdminNav() {
+export default function AdminNav({ mobile = false }: { mobile?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -56,6 +56,43 @@ export default function AdminNav() {
     router.replace('/auth/login');
   }
 
+  // ── Mobile bottom bar variant ──────────────────────────────────────────────
+  if (mobile) {
+    return (
+      <nav className="flex items-center justify-around px-1 py-1">
+        {NAV_ITEMS.map(({ href, label, Icon }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold transition-colors ${
+                active ? 'text-primary' : 'text-gray-400 hover:text-gray-700'
+              }`}
+            >
+              <span className={`rounded-lg p-1.5 ${
+                active ? 'bg-primary/10' : ''
+              }`}>
+                <Icon />
+              </span>
+              {label}
+            </Link>
+          );
+        })}
+        <button
+          onClick={handleLogout}
+          className="flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-semibold text-gray-400 transition-colors hover:text-gray-700"
+        >
+          <span className="rounded-lg p-1.5">
+            <IconLogout />
+          </span>
+          Salir
+        </button>
+      </nav>
+    );
+  }
+
+  // ── Desktop sidebar variant ────────────────────────────────────────────────
   return (
     <nav className="flex flex-1 flex-col p-4">
       <div className="flex flex-col gap-1">

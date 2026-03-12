@@ -35,7 +35,7 @@ export default function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="flex w-full max-w-4xl overflow-hidden rounded-3xl shadow-xl">
         {/* ── Left branding panel ── */}
-        <div className="flex w-2/5 flex-col justify-between bg-gray-50 p-10">
+        <div className="hidden md:flex md:w-2/5 flex-col justify-between bg-gray-50 p-10">
           <NutrabioticsLogo />
           <div>
             <h1 className="text-4xl font-extrabold leading-tight text-gray-900">
@@ -49,7 +49,7 @@ export default function LoginForm() {
         </div>
 
         {/* ── Right form panel ── */}
-        <div className="flex w-3/5 flex-col justify-center bg-white px-12 py-10">
+        <div className="flex w-full md:w-3/5 flex-col justify-center bg-white px-6 py-10 sm:px-12">
           <h2 className="text-2xl font-bold text-gray-900">Iniciar sesión</h2>
           <p className="mt-1 text-sm text-gray-500">
             Bienvenido de nuevo a tu portal de salud.

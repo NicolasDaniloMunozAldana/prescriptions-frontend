@@ -23,7 +23,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Admin</p>
         </div>
 
-        <main className="flex-1 p-5 lg:p-8">{children}</main>
+        <main className="flex-1 p-5 pb-20 md:pb-5 lg:p-8">{children}</main>
+      </div>
+
+      {/* Mobile bottom nav bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white md:hidden">
+        <AdminNav mobile />
       </div>
     </div>
   );
