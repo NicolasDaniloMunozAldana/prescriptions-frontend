@@ -39,6 +39,7 @@ export interface MetricsByDay {
 
 export interface TopDoctor {
   doctorId: string;
+  name: string;
   count: number;
 }
 

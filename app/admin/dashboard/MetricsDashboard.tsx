@@ -303,13 +303,27 @@ export default function MetricsDashboard() {
             className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-primary focus:outline-none"
           />
         </div>
-        <button
-          onClick={handleApply}
-          disabled={isLoading}
-          className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isLoading ? 'Cargando…' : 'Aplicar filtro'}
-        </button>
+        <div className="flex items-end gap-2">
+          <button
+            onClick={handleApply}
+            disabled={isLoading}
+            className="cursor-pointer rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isLoading ? 'Cargando…' : 'Aplicar filtro'}
+          </button>
+          <button
+            onClick={() => {
+              setFrom(thirtyDaysAgo);
+              setTo(today);
+              setAppliedFrom(thirtyDaysAgo);
+              setAppliedTo(today);
+            }}
+            disabled={isLoading}
+            className="cursor-pointer rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-500 transition hover:bg-gray-50 disabled:opacity-50"
+          >
+            Limpiar
+          </button>
+        </div>
         {isLoading && (
           <span className="self-center text-xs text-gray-400">Actualizando…</span>
         )}
@@ -424,16 +438,16 @@ export default function MetricsDashboard() {
                       </span>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2 text-sm">
-                          <code className="truncate text-xs text-gray-500">
-                            {d.doctorId}
-                          </code>
-                          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                            {d.count} rx
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="truncate text-sm font-semibold text-gray-800">
+                            {d.name}
+                          </p>
+                          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                            {d.count} {d.count === 1 ? 'prescripción' : 'prescripciones'}
                           </span>
                         </div>
                         {/* progress bar */}
-                        <div className="mt-1.5 h-1.5 w-full rounded-full bg-gray-100">
+                        <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100">
                           <div
                             className="h-1.5 rounded-full bg-primary/60 transition-all"
                             style={{ width: `${widthPct}%` }}

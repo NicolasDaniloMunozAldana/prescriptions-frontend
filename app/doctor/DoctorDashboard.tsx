@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import NutrabioticsLogo from '@/app/components/auth/NutrabioticsLogo';
 import CreatePrescriptionModal from './CreatePrescriptionModal';
 import {
@@ -307,7 +308,13 @@ export default function DoctorDashboard() {
                   )}
 
                   {/* Actions */}
-                  <div className="mt-auto pt-4 border-t border-gray-100">
+                  <div className="mt-auto flex flex-col gap-2 pt-4 border-t border-gray-100">
+                    <Link
+                      href={`/doctor/prescriptions/${rx.id}`}
+                      className="w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+                    >
+                      Ver detalles
+                    </Link>
                     <button
                       onClick={() => handleDownloadPDF(rx.id, rx.code)}
                       disabled={downloadingId === rx.id}

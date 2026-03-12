@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import NutrabioticsLogo from '@/app/components/auth/NutrabioticsLogo';
 import {
   getProfile,
@@ -301,6 +302,12 @@ export default function PrescriptionsDashboard() {
 
                   {/* Actions */}
                   <div className="mt-auto flex flex-col gap-2 border-t border-gray-100 pt-4">
+                    <Link
+                      href={`/dashboard/prescriptions/${rx.id}`}
+                      className="w-full rounded-lg border border-gray-200 py-2.5 text-center text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+                    >
+                      Ver detalles
+                    </Link>
                     {rx.status === 'pending' && (
                       <button
                         onClick={() => setConfirmId(rx.id)}
