@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
     AuthError,
     createUser,
@@ -378,11 +379,13 @@ export default function UsersManager() {
         setShowCreate(false);
         setPage(1);
         fetchUsers(1, search, roleFilter);
+        toast.success('Usuario creado exitosamente');
     }
 
     function handleEditSuccess(updated: UserRecord) {
         setEditTarget(null);
         setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+        toast.success('Usuario actualizado exitosamente');
     }
 
     async function handleDelete() {
@@ -394,12 +397,13 @@ export default function UsersManager() {
             const nextPage = users.length === 1 && page > 1 ? page - 1 : page;
             setPage(nextPage);
             fetchUsers(nextPage, search, roleFilter);
+            toast.success('Usuario eliminado exitosamente');
         } catch (err) {
             if (err instanceof AuthError) {
                 router.replace('/auth/login');
                 return;
             }
-            setError((err as Error).message);
+            toast.error((err as Error).message);
         } finally {
             setDeleting(false);
         }
