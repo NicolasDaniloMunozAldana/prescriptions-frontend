@@ -20,7 +20,9 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await login({ email, password });
-      router.push('/dashboard');
+      const profileRes = await fetch('/api/auth/profile');
+      const profile = await profileRes.json();
+      router.push(profile?.role === 'doctor' ? '/doctor' : '/dashboard');
     } catch (err) {
       setError((err as Error).message);
     } finally {
