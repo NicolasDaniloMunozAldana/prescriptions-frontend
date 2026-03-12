@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { login } from '../auth.api';
+import { login } from '@/lib/auth.service';
 import PasswordInput from '../../components/auth/PasswordInput';
 import NutrabioticsLogo from '../../components/auth/NutrabioticsLogo';
 
@@ -19,11 +19,8 @@ export default function LoginForm() {
     setError('');
     setLoading(true);
     try {
-      const tokens = await login({ email, password });
-      // Store tokens — move to httpOnly cookies via an API route for production
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
-      router.push('/');
+      await login({ email, password });
+      router.push('/dashboard');
     } catch (err) {
       setError((err as Error).message);
     } finally {
