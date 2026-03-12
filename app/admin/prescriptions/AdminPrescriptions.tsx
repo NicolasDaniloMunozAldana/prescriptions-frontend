@@ -47,7 +47,7 @@ export default function AdminPrescriptions() {
         .split('T')[0];
 
     const [prescriptions, setPrescriptions] = useState<PrescriptionRow[]>([]);
-    const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 15, totalPages: 1 });
+    const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 10, totalPages: 1 });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -63,7 +63,7 @@ export default function AdminPrescriptions() {
             setIsLoading(true);
             setError('');
             try {
-                const qs = new URLSearchParams({ page: String(p), limit: '15', from: f, to: t });
+                const qs = new URLSearchParams({ page: String(p), limit: '10', from: f, to: t });
                 if (status !== 'all') qs.set('status', status);
 
                 const res = await fetch(`/api/admin/prescriptions?${qs}`);

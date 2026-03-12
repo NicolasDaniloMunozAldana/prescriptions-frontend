@@ -303,7 +303,7 @@ export default function UsersManager() {
     const [meta, setMeta] = useState({
         total: 0,
         page: 1,
-        limit: 15,
+        limit: 10,
         totalPages: 1,
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -347,7 +347,7 @@ export default function UsersManager() {
             try {
                 const resp = await getUsers({
                     page: p,
-                    limit: 15,
+                    limit: 10,
                     query: q || undefined,
                     role: r === 'all' ? undefined : r,
                 });
