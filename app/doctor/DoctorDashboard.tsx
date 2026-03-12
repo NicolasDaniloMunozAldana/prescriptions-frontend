@@ -3,18 +3,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import NutrabioticsLogo from '@/app/components/auth/NutrabioticsLogo';
+import CreatePrescriptionModal from './CreatePrescriptionModal';
 import {
-  getProfile,
-  getPrescriptions,
-  consumePrescription,
+  getDoctorPrescriptions,
   downloadPrescriptionPDF,
   logout,
+  getProfile,
   AuthError,
   type UserProfile,
-  type Prescription,
+  type DoctorPrescription,
   type PrescriptionMeta,
   type StatusFilter,
-} from '@/lib/prescriptions.service';
+} from '@/lib/doctor.service';
 
 const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'Todas' },
@@ -22,11 +22,11 @@ const FILTERS: { value: StatusFilter; label: string }[] = [
   { value: 'consumed', label: 'Consumidas' },
 ];
 
-export default function PrescriptionsDashboard() {
+export default function DoctorDashboard() {
   const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [prescriptions, setPrescriptions] = useState<DoctorPrescription[]>([]);
   const [meta, setMeta] = useState<PrescriptionMeta>({
     total: 0,
     page: 1,
@@ -37,17 +37,16 @@ export default function PrescriptionsDashboard() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [consumingId, setConsumingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // ─── Load profile once on mount ──────────────────────────────────────────
   useEffect(() => {
     getProfile()
       .then((p) => {
-        if (p.role === 'doctor') {
-          router.replace('/doctor');
+        if (p.role !== 'doctor') {
+          router.replace('/dashboard');
           return;
         }
         setProfile(p);
@@ -60,7 +59,7 @@ export default function PrescriptionsDashboard() {
     setIsLoading(true);
     setError('');
     try {
-      const data = await getPrescriptions({
+      const data = await getDoctorPrescriptions({
         page,
         ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
       });
@@ -78,31 +77,13 @@ export default function PrescriptionsDashboard() {
   }, [page, statusFilter, router]);
 
   useEffect(() => {
-    loadPrescriptions();
-  }, [loadPrescriptions]);
+    if (profile) loadPrescriptions();
+  }, [profile, loadPrescriptions]);
 
   // ─── Filter change ────────────────────────────────────────────────────────
   function changeFilter(filter: StatusFilter) {
     setStatusFilter(filter);
     setPage(1);
-  }
-
-  // ─── Consume ──────────────────────────────────────────────────────────────
-  async function handleConsume(id: string) {
-    setConsumingId(id);
-    setConfirmId(null);
-    try {
-      const updated = await consumePrescription(id);
-      setPrescriptions((prev) => prev.map((p) => (p.id === id ? updated : p)));
-    } catch (err) {
-      if (err instanceof AuthError) {
-        router.replace('/auth/login');
-        return;
-      }
-      setError((err as Error).message);
-    } finally {
-      setConsumingId(null);
-    }
   }
 
   // ─── Download PDF ─────────────────────────────────────────────────────────
@@ -163,9 +144,12 @@ export default function PrescriptionsDashboard() {
                 >
                   {profile.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="hidden text-sm font-medium text-gray-700 sm:block">
-                  {profile.name}
-                </span>
+                <div className="hidden sm:block">
+                  <p className="text-sm font-medium text-gray-700">{profile.name}</p>
+                  {profile.doctor?.specialty && (
+                    <p className="text-xs text-gray-400">{profile.doctor.specialty}</p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={handleLogout}
@@ -182,12 +166,23 @@ export default function PrescriptionsDashboard() {
       {/* ── Page content ── */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
-        {/* Heading */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Mis Prescripciones</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Consulta y gestiona tus prescripciones médicas
-          </p>
+        {/* Heading + create button */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Mis Prescripciones</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Gestiona las prescripciones que has emitido
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva prescripción
+          </button>
         </div>
 
         {/* Status filters */}
@@ -205,6 +200,11 @@ export default function PrescriptionsDashboard() {
               {label}
             </button>
           ))}
+          {meta.total > 0 && (
+            <span className="ml-auto self-center text-sm text-gray-400">
+              {meta.total} {meta.total === 1 ? 'prescripción' : 'prescripciones'}
+            </span>
+          )}
         </div>
 
         {/* Error banner */}
@@ -222,6 +222,12 @@ export default function PrescriptionsDashboard() {
         ) : prescriptions.length === 0 ? (
           <div className="rounded-2xl bg-white py-20 text-center shadow-sm">
             <p className="text-gray-400">No tienes prescripciones en esta categoría.</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="mt-4 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 cursor-pointer"
+            >
+              Crear primera prescripción
+            </button>
           </div>
         ) : (
           <>
@@ -254,15 +260,13 @@ export default function PrescriptionsDashboard() {
                     </p>
                   </div>
 
-                  {/* Doctor */}
+                  {/* Patient */}
                   <div className="mt-3">
-                    <p className="text-xs text-gray-400">Doctor</p>
+                    <p className="text-xs text-gray-400">Paciente</p>
                     <p className="mt-0.5 text-sm font-medium text-gray-800">
-                      {rx.author.user.name}
+                      {rx.patient.user.name}
                     </p>
-                    {rx.author.specialty && (
-                      <p className="text-xs text-gray-500">{rx.author.specialty}</p>
-                    )}
+                    <p className="text-xs text-gray-500">{rx.patient.user.email}</p>
                   </div>
 
                   {/* Medications */}
@@ -273,6 +277,9 @@ export default function PrescriptionsDashboard() {
                         {rx.items.slice(0, 2).map((item) => (
                           <li key={item.id} className="text-sm text-gray-700">
                             — {item.name}
+                            {item.dosage && (
+                              <span className="text-xs text-gray-400"> · {item.dosage}</span>
+                            )}
                           </li>
                         ))}
                         {rx.items.length > 2 && (
@@ -300,16 +307,7 @@ export default function PrescriptionsDashboard() {
                   )}
 
                   {/* Actions */}
-                  <div className="mt-auto flex flex-col gap-2 border-t border-gray-100 pt-4">
-                    {rx.status === 'pending' && (
-                      <button
-                        onClick={() => setConfirmId(rx.id)}
-                        disabled={consumingId === rx.id}
-                        className="w-full rounded-lg border border-primary py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                      >
-                        {consumingId === rx.id ? 'Procesando…' : 'Marcar como consumida'}
-                      </button>
-                    )}
+                  <div className="mt-auto pt-4 border-t border-gray-100">
                     <button
                       onClick={() => handleDownloadPDF(rx.id, rx.code)}
                       disabled={downloadingId === rx.id}
@@ -348,38 +346,17 @@ export default function PrescriptionsDashboard() {
         )}
       </main>
 
-      {/* ── Confirm consume dialog ── */}
-      {confirmId && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="confirm-dialog-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-        >
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h3 id="confirm-dialog-title" className="text-base font-bold text-gray-900">
-              Confirmar consumo
-            </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              ¿Estás seguro de que deseas marcar esta prescripción como consumida?
-              Esta acción no puede deshacerse.
-            </p>
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={() => setConfirmId(null)}
-                className="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleConsume(confirmId)}
-                className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 cursor-pointer"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* ── Create prescription modal ── */}
+      {showCreateModal && (
+        <CreatePrescriptionModal
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => {
+            setShowCreateModal(false);
+            setStatusFilter('all');
+            setPage(1);
+            loadPrescriptions();
+          }}
+        />
       )}
     </div>
   );
