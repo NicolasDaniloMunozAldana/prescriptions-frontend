@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Nutrabiotics',
   description: 'Tu portal personalizado para gestionar tu salud y bienestar.',
+  icons: {
+    icon: "/Nutrabiotics_Logo.svg",
+  },
 };
 
 export default function RootLayout({
